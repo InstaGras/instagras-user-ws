@@ -1,29 +1,21 @@
 //DB CONNECTION
 
 const { Pool, Client } = require('pg')
-const connectionString = 'postgresql://postgres:hercules1@localhost:8080/postgres'
-const pool = new Pool({
-  connectionString: connectionString,
-})
-pool.query('SELECT NOW()', (err, res) => {
-  console.log(err, res)
-  pool.end()
-})
+
+
 const client = new Client({
-  connectionString: connectionString,
-})
-client.connect()
-client.query('SELECT NOW()', (err, res) => {
-  console.log(err, res)
-  client.end()
+  user: 'postgres',
+  host: 'localhost',
+  database: 'world_of_commits_db',
+  password: 'hercules1',
+  port: 5432,
 })
 
-
+client.connect();
 
 //--------------------------------------------------------------------------------------------------------//
 //API
 
-/*
 
 //L'application requiert l'utilisation du module Express.
 //La variable express nous permettra d'utiliser les fonctionnalités du module Express.  
@@ -49,12 +41,45 @@ myRouter.route('/projects')
 // J'implémente les méthodes GET, PUT, UPDATE et DELETE
 // GET
 .get(function(req,res){ 
-	  res.json({message : "Liste toutes le projets", methode : req.method});
+	res.json({message : "Liste toutes le projets", methode : req.method});
 })
 //POST
 .post(function(req,res){
-      res.json({message : "Ajoute une nouveau projet", methode : req.method});
+	//connexion à la bdd
+	var user_id =req.body.owner.user_id;
+	var name=req.body.owner.name;
+	var username=req.body.owner.username;
+	var requeteInsertionUser = "INSERT INTO gitlab_user(user_id,name,username) values (" + user_id + ",'"+name+"','"+username+"');";
 
+	var project_name =req.body.project_name;
+	var owner_id=req.body.owner.user_id;
+	var created_at=req.body.created_at;
+	var requeteInsertionProjet = "INSERT INTO project(project_id,project_name,owner_id,created_at) values (nextval('projects_sequence'),'" + project_name + "',"+owner_id+",'"+created_at+"');";
+	
+	//création de le requête commit.
+	var requeteCommit = "commit;";
+	
+	//création de la requete complete
+	var requeteComplete = requeteInsertionUser + requeteInsertionProjet + requeteCommit;
+	
+	//execution de la requete d'insertion
+	client.query(requeteComplete, (err, res) => {
+		//si on a une erreur c que user peut etre deja present en bdd donc on test sans insertion user
+		if(err){
+				var requeteLimitee = requeteInsertionProjet + requeteCommit;
+				//execution de la requete d'insertion
+				client.query(requeteLimitee, (err, res) => {
+					console.log(err, res)
+				});
+
+		}else{
+			console.log(err, res);
+		}
+	});
+	
+	
+	
+	res.json({message : "L'insertion du projet et de l'utilisateur associé est un succès ! Requete : "+requeteComplete, methode : req.method});
 })
 
 myRouter.route('/')
@@ -73,4 +98,3 @@ app.listen(port, hostname, function(){
 	console.log("Mon serveur fonctionne sur http://"+ hostname +":"+port); 
 });
 
-*/
