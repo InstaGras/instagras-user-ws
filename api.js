@@ -1,3 +1,32 @@
+/**
+ * @api {get} /user/:id Request User information
+ * @apiName GetUser
+ * @apiGroup User
+ *
+ * @apiParam {Number} id Users unique ID.
+ *
+ * @apiSuccess {String} firstname Firstname of the User.
+ * @apiSuccess {String} lastname  Lastname of the User.
+ *
+ * @apiSuccessExample Success-Response:
+ *     HTTP/1.1 200 OK
+ *     {
+ *       "firstname": "John",
+ *       "lastname": "Doe"
+ *     }
+ *
+ * @apiError UserNotFound The id of the User was not found.
+ *
+ * @apiErrorExample Error-Response:
+ *     HTTP/1.1 404 Not Found
+ *     {
+ *       "error": "UserNotFound"
+ *     }
+ */
+
+
+
+
 //--------------------------------------------------------------------------------------------------------//
 //GESTION DES VARIABLES D ENVIRONNEMENT
 
@@ -20,6 +49,7 @@ const client = new Client({
 
 client.connect();
 
+
 //--------------------------------------------------------------------------------------------------------//
 //API
 
@@ -28,7 +58,7 @@ client.connect();
 //La constiable express nous permettra d'utiliser les fonctionnalités du module Express.  
 const express = require('express'); 
 // Nous définissons ici les paramètres du serveur.
-const hostname = 'localhost'; 
+const hostname = process.env['app.hostname'];
 const port = process.env['app.port']; 
  
 // Nous créons un objet de type Express. 
@@ -268,14 +298,54 @@ myRouter.route('/users/:id/projects')
 	})
 })
 
- 
+
+
+
+//--------------------------------------------------------------------------------------------------------//
+//PREVENTING ATTACKS
 
  
-// Nous demandons à l'application d'utiliser notre routeur
-app.use(myRouter);  
+ // Importing Dependencies
+const rateLimit = require('express-rate-limit');
+const helmet = require('helmet');
+const mongoSanitize = require('express-mongo-sanitize');
+const xss = require('xss-clean');
+
+// Helmet
+app.use(helmet());
+
+// Rate Limiting
+const limit = rateLimit({
+    max: 100,// max requests
+    windowMs: 60 * 60 * 1000, // 1 Hour of 'ban' / lockout 
+    message: 'Too many requests' // message to send
+});
+
+// Body Parser
+app.use(express.json({ limit: '10kb' })); // Body limit is 10
+
+// Data Sanitization against NoSQL Injection Attacks
+app.use(mongoSanitize());
+
+// Data Sanitization against XSS attacks
+app.use(xss());
+
+ 
+// Nous demandons à l'application d'utiliser notre routeur avec le rate limiting
+app.use(myRouter,limit);  
  
 // Démarrer le serveur 
 app.listen(port, hostname, function(){
 	console.log("Mon serveur fonctionne sur http://"+ hostname +":"+port); 
 });
+
+
+//--------------------------------------------------------------------------------------------------------//
+//GENERATION AUTOMATIQUE DE LA DOC DE L API
+
+
+const nodeApiDocGenerator = require('node-api-doc-generator')
+nodeApiDocGenerator(app,process.env['app.hostname'],process.env['app.port'])
+
+
 
