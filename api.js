@@ -48,7 +48,12 @@ myRouter.route('/')
 .all(function(req,res){ 
       res.json({message : "Bienvenue sur l'api de worldOfCommits", methode : req.method});
 });
- 
+
+
+/*
+	/PROJECTS
+*/
+
 myRouter.route('/projects')
 // GET
 .get(function(req,response){
@@ -81,7 +86,6 @@ myRouter.route('/projects')
 				};
 				jsonObject[key].push(projects);
 			}
-			console.log(projects);
 			response.send({
 				success: true,
 				code: 200,
@@ -123,10 +127,145 @@ myRouter.route('/projects')
 		}
 	});
 	
-	res.json({message : "L'insertion du projet et de l'utilisateur associé est un succès ! Requete : "+requeteComplete, methode : req.method});
+	res.json({message : "L'insertion du projet et de l'utilisateur associé est un succès !", methode : req.method});
 })
 
-//GET
+
+
+/*
+	/USERS
+*/
+
+myRouter.route('/users')
+// GET
+.get(function(req,response){
+	const requeteSelectionUser = "SELECT * from gitlab_user";
+	const query = {
+		text: requeteSelectionUser,
+		types: {
+			getTypeParser: () => val => val,
+		},
+	}
+	// callback
+	client.query(query, (err, res) => {
+		if (err) {
+			console.log(err.stack);
+			response.send({
+				success: false,
+				code: 400
+			});
+		} else {
+			const jsonObject={};
+			const key = 'user';
+			const rows = res.rows;
+			jsonObject[key] = [];
+			for (var i = 0; i < rows.length; i++) { 
+				var users={
+					"user_id":rows[i].user_id,
+					"name" :rows[i].name,
+					"username":rows[i].username,
+				};
+				jsonObject[key].push(users);
+			}
+			response.send({
+				success: true,
+				code: 200,
+				data :jsonObject
+			});
+		}
+	})
+})
+
+/*
+	/USERS/:ID
+*/
+
+myRouter.route('/users/:id')
+// GET
+.get(function(req,response){
+	const user_id = req.params.id;
+	const requeteSelectionUser = "SELECT * from gitlab_user where user_id ="+user_id+";";
+	const query = {
+		text: requeteSelectionUser,
+		types: {
+			getTypeParser: () => val => val,
+		},
+	}
+	// callback
+	client.query(query, (err, res) => {
+		if (err) {
+			console.log(err.stack);
+			response.send({
+				success: false,
+				code: 400
+			});
+		} else {
+			const jsonObject={};
+			const key = 'user';
+			const rows = res.rows;
+			jsonObject[key] = [];
+			for (var i = 0; i < rows.length; i++) { 
+				var users={
+					"user_id":rows[i].user_id,
+					"name" :rows[i].name,
+					"username":rows[i].username,
+				};
+				jsonObject[key].push(users);
+			}
+			response.send({
+				success: true,
+				code: 200,
+				data :jsonObject
+			});
+		}
+	})
+})
+
+/*
+	/USERS/:ID/PROJECTS
+*/
+
+myRouter.route('/users/:id/projects')
+// GET
+.get(function(req,response){
+	const user_id = req.params.id;
+	const requeteSelectionProjetsDeUser = "SELECT * from project where owner_id ="+user_id+";";
+	const query = {
+		text: requeteSelectionProjetsDeUser,
+		types: {
+			getTypeParser: () => val => val,
+		},
+	}
+	// callback
+	client.query(query, (err, res) => {
+		if (err) {
+			console.log(err.stack);
+			response.send({
+				success: false,
+				code: 400
+			});
+		} else {
+			const jsonObject={};
+			const key = 'project';
+			const rows = res.rows;
+			jsonObject[key] = [];
+			for (var i = 0; i < rows.length; i++) { 
+				var projects={
+					"project_id":rows[i].project_id,
+					"owner_id" :rows[i].owner_id,
+					"created_at":rows[i].created_at,
+					"project_name":rows[i].project_name
+				};
+				jsonObject[key].push(projects);
+			}
+			response.send({
+				success: true,
+				code: 200,
+				data :jsonObject
+			});
+		}
+	})
+})
 
  
 
