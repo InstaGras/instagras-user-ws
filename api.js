@@ -101,10 +101,11 @@ myRouter.route('/projects')
 	const username=req.body.owner.username;
 	const requeteInsertionUser = "INSERT INTO gitlab_user(user_id,name,username) values (" + user_id + ",'"+name+"','"+username+"');";
 
+	const project_id =req.body.project_id;
 	const project_name =req.body.project_name;
 	const owner_id=req.body.owner.user_id;
 	const created_at=req.body.created_at;
-	const requeteInsertionProjet = "INSERT INTO project(project_id,project_name,owner_id,created_at) values (nextval('projects_sequence'),'" + project_name + "',"+owner_id+",'"+created_at+"');";
+	const requeteInsertionProjet = "INSERT INTO project(project_id,project_name,owner_id,created_at) values ("+ project_id +",'" + project_name + "',"+owner_id+",'"+created_at+"');";
 	
 	//création de le requête commit.
 	const requeteCommit = "commit;";
