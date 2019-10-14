@@ -32,20 +32,50 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
  
  
-//Afin de faciliter le routage (les URL que nous souhaitons prendre en charge dans notre API), nous créons un objet Router.
-//C'est à partir de cet objet myRouter, que nous allons implémenter les méthodes. 
+ 
 var myRouter = express.Router(); 
  
-// Je vous rappelle notre route (/piscines).  
 myRouter.route('/projects')
-// J'implémente les méthodes GET, PUT, UPDATE et DELETE
+
 // GET
-.get(function(req,res){ 
-	res.json({message : "Liste toutes le projets", methode : req.method});
+.get(function(req,response){
+	var requeteSelectionProjet = "SELECT * from project";
+	const query = {
+		text: requeteSelectionProjet,
+		types: {
+			getTypeParser: () => val => val,
+		},
+	}
+	// callback
+	client.query(query, (err, res) => {
+		if (err) {
+			console.log(err.stack);
+			res.json({message : "Erreur pendant la récupération de tous les projets.", methode : req.method});
+		} else {
+			var jsonObject={};
+			var key = 'project';
+			var rows = res.rows;
+			jsonObject[key] = [];
+			for (var i = 0; i < rows.length; i++) { 
+				var projects={
+					"project_id":rows[i].project_id,
+					"owner_id" :rows[i].owner_id,
+					"created_at":rows[i].created_at,
+					"created_at":rows[i].project_name
+				};
+				jsonObject[key].push(projects);
+			}
+			console.log(projects);
+			response.send({
+				success: true,
+				code: 200,
+				data :jsonObject
+			});
+		}
+	})
 })
 //POST
 .post(function(req,res){
-	//connexion à la bdd
 	var user_id =req.body.owner.user_id;
 	var name=req.body.owner.name;
 	var username=req.body.owner.username;
@@ -77,10 +107,12 @@ myRouter.route('/projects')
 		}
 	});
 	
-	
-	
 	res.json({message : "L'insertion du projet et de l'utilisateur associé est un succès ! Requete : "+requeteComplete, methode : req.method});
 })
+
+//GET
+
+
 
 myRouter.route('/')
 // all permet de prendre en charge toutes les méthodes. 
