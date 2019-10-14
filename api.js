@@ -1,14 +1,21 @@
+//--------------------------------------------------------------------------------------------------------//
+//GESTION DES VARIABLES D ENVIRONNEMENT
+
+require('dotenv').config({path: __dirname + '/.env'})
+
+
+//--------------------------------------------------------------------------------------------------------//
 //DB CONNECTION
 
 const { Pool, Client } = require('pg')
 
 
 const client = new Client({
-  user: 'postgres',
-  host: 'localhost',
-  database: 'world_of_commits_db',
-  password: 'hercules1',
-  port: 5432,
+  user: process.env['client.user'],
+  host: process.env['client.host'],
+  database: process.env['client.database'],
+  password: process.env['client.password'],
+  port: process.env['client.port']
 })
 
 client.connect();
@@ -18,28 +25,34 @@ client.connect();
 
 
 //L'application requiert l'utilisation du module Express.
-//La variable express nous permettra d'utiliser les fonctionnalités du module Express.  
-var express = require('express'); 
+//La constiable express nous permettra d'utiliser les fonctionnalités du module Express.  
+const express = require('express'); 
 // Nous définissons ici les paramètres du serveur.
-var hostname = 'localhost'; 
-var port = 3000; 
+const hostname = 'localhost'; 
+const port = process.env['app.port']; 
  
 // Nous créons un objet de type Express. 
-var app = express(); 
+const app = express(); 
 
-var bodyParser = require("body-parser"); 
+const bodyParser = require("body-parser"); 
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
  
  
  
-var myRouter = express.Router(); 
+const myRouter = express.Router(); 
+
+
+myRouter.route('/')
+//permet de prendre en charge toutes les méthodes. 
+.all(function(req,res){ 
+      res.json({message : "Bienvenue sur l'api de worldOfCommits", methode : req.method});
+});
  
 myRouter.route('/projects')
-
 // GET
 .get(function(req,response){
-	var requeteSelectionProjet = "SELECT * from project";
+	const requeteSelectionProjet = "SELECT * from project";
 	const query = {
 		text: requeteSelectionProjet,
 		types: {
@@ -50,18 +63,21 @@ myRouter.route('/projects')
 	client.query(query, (err, res) => {
 		if (err) {
 			console.log(err.stack);
-			res.json({message : "Erreur pendant la récupération de tous les projets.", methode : req.method});
+			response.send({
+				success: false,
+				code: 400
+			});
 		} else {
-			var jsonObject={};
-			var key = 'project';
-			var rows = res.rows;
+			const jsonObject={};
+			const key = 'project';
+			const rows = res.rows;
 			jsonObject[key] = [];
 			for (var i = 0; i < rows.length; i++) { 
 				var projects={
 					"project_id":rows[i].project_id,
 					"owner_id" :rows[i].owner_id,
 					"created_at":rows[i].created_at,
-					"created_at":rows[i].project_name
+					"project_name":rows[i].project_name
 				};
 				jsonObject[key].push(projects);
 			}
@@ -76,27 +92,27 @@ myRouter.route('/projects')
 })
 //POST
 .post(function(req,res){
-	var user_id =req.body.owner.user_id;
-	var name=req.body.owner.name;
-	var username=req.body.owner.username;
-	var requeteInsertionUser = "INSERT INTO gitlab_user(user_id,name,username) values (" + user_id + ",'"+name+"','"+username+"');";
+	const user_id =req.body.owner.user_id;
+	const name=req.body.owner.name;
+	const username=req.body.owner.username;
+	const requeteInsertionUser = "INSERT INTO gitlab_user(user_id,name,username) values (" + user_id + ",'"+name+"','"+username+"');";
 
-	var project_name =req.body.project_name;
-	var owner_id=req.body.owner.user_id;
-	var created_at=req.body.created_at;
-	var requeteInsertionProjet = "INSERT INTO project(project_id,project_name,owner_id,created_at) values (nextval('projects_sequence'),'" + project_name + "',"+owner_id+",'"+created_at+"');";
+	const project_name =req.body.project_name;
+	const owner_id=req.body.owner.user_id;
+	const created_at=req.body.created_at;
+	const requeteInsertionProjet = "INSERT INTO project(project_id,project_name,owner_id,created_at) values (nextval('projects_sequence'),'" + project_name + "',"+owner_id+",'"+created_at+"');";
 	
 	//création de le requête commit.
-	var requeteCommit = "commit;";
+	const requeteCommit = "commit;";
 	
 	//création de la requete complete
-	var requeteComplete = requeteInsertionUser + requeteInsertionProjet + requeteCommit;
+	const requeteComplete = requeteInsertionUser + requeteInsertionProjet + requeteCommit;
 	
 	//execution de la requete d'insertion
 	client.query(requeteComplete, (err, res) => {
 		//si on a une erreur c que user peut etre deja present en bdd donc on test sans insertion user
 		if(err){
-				var requeteLimitee = requeteInsertionProjet + requeteCommit;
+				const requeteLimitee = requeteInsertionProjet + requeteCommit;
 				//execution de la requete d'insertion
 				client.query(requeteLimitee, (err, res) => {
 					console.log(err, res)
@@ -112,13 +128,6 @@ myRouter.route('/projects')
 
 //GET
 
-
-
-myRouter.route('/')
-// all permet de prendre en charge toutes les méthodes. 
-.all(function(req,res){ 
-      res.json({message : "Bienvenue sur l'api de worldOfCommits", methode : req.method});
-});
  
 
  
