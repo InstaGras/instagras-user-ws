@@ -1,42 +1,12 @@
-/**
- * @api {get} /user/:id Request User information
- * @apiName GetUser
- * @apiGroup User
- *
- * @apiParam {Number} id Users unique ID.
- *
- * @apiSuccess {String} firstname Firstname of the User.
- * @apiSuccess {String} lastname  Lastname of the User.
- *
- * @apiSuccessExample Success-Response:
- *     HTTP/1.1 200 OK
- *     {
- *       "firstname": "John",
- *       "lastname": "Doe"
- *     }
- *
- * @apiError UserNotFound The id of the User was not found.
- *
- * @apiErrorExample Error-Response:
- *     HTTP/1.1 404 Not Found
- *     {
- *       "error": "UserNotFound"
- *     }
- */
-
-
-
-
 //--------------------------------------------------------------------------------------------------------//
 //GESTION DES VARIABLES D ENVIRONNEMENT
 
 require('dotenv').config({path: __dirname + '/.env'})
 
-
 //--------------------------------------------------------------------------------------------------------//
 //DB CONNECTION
 
-const { Pool, Client } = require('pg')
+const { Pool, Client } = require('pg');
 
 
 const client = new Client({
@@ -44,204 +14,152 @@ const client = new Client({
   host: process.env['client.host'],
   database: process.env['client.database'],
   password: process.env['client.password'],
-  port: process.env['client.port']
+  port: process.env['client.port'],
 })
 
 client.connect();
 
-
 //--------------------------------------------------------------------------------------------------------//
 //API
 
-
-//L'application requiert l'utilisation du module Express.
-//La constiable express nous permettra d'utiliser les fonctionnalités du module Express.  
 const express = require('express'); 
-// Nous définissons ici les paramètres du serveur.
 const hostname = process.env['app.hostname'];
-const port = process.env['app.port']; 
- 
-// Nous créons un objet de type Express. 
+const port = process.env['app.port'];  
 const app = express(); 
+const bodyParser = require("body-parser");
+const myRouter = express.Router(); 
 
-const bodyParser = require("body-parser"); 
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
  
- 
- 
-const myRouter = express.Router(); 
-
-
 myRouter.route('/')
 //permet de prendre en charge toutes les méthodes. 
 .all(function(req,res){ 
-      res.json({message : "Bienvenue sur l'api de worldOfCommits", methode : req.method});
+      res.json({message : "Welcome to Instagras user web service", methode : req.method});
 });
-
-
-/*
-	/PROJECTS
-*/
-
-myRouter.route('/projects')
-// GET
-.get(function(req,response){
-	const requeteSelectionProjet = "SELECT * from project";
-	const query = {
-		text: requeteSelectionProjet,
-		types: {
-			getTypeParser: () => val => val,
-		},
-	}
-	// callback
-	client.query(query, (err, res) => {
-		if (err) {
-			console.log(err.stack);
-			response.send({
-				success: false,
-				code: 400
-			});
-		} else {
-			const jsonObject={};
-			const key = 'project';
-			const rows = res.rows;
-			jsonObject[key] = [];
-			for (var i = 0; i < rows.length; i++) { 
-				var projects={
-					"project_id":rows[i].project_id,
-					"owner_id" :rows[i].owner_id,
-					"created_at":rows[i].created_at,
-					"project_name":rows[i].project_name
-				};
-				jsonObject[key].push(projects);
-			}
-			response.send({
-				success: true,
-				code: 200,
-				data :jsonObject
-			});
-		}
-	})
-})
-//POST
-.post(function(req,res){
-	const user_id =req.body.owner.user_id;
-	const name=req.body.owner.name;
-	const username=req.body.owner.username;
-	const requeteInsertionUser = "INSERT INTO gitlab_user(user_id,name,username) values (" + user_id + ",'"+name+"','"+username+"');";
-
-	const project_id =req.body.project_id;
-	const project_name =req.body.project_name;
-	const owner_id=req.body.owner.user_id;
-	const created_at=req.body.created_at;
-	const requeteInsertionProjet = "INSERT INTO project(project_id,project_name,owner_id,created_at) values ("+ project_id +",'" + project_name + "',"+owner_id+",'"+created_at+"');";
-	
-	//création de le requête commit.
-	const requeteCommit = "commit;";
-	
-	//création de la requete complete
-	const requeteComplete = requeteInsertionUser + requeteInsertionProjet + requeteCommit;
-	
-	//execution de la requete d'insertion
-	client.query(requeteComplete, (err, res) => {
-		//si on a une erreur c que user peut etre deja present en bdd donc on test sans insertion user
-		if(err){
-				const requeteLimitee = requeteInsertionProjet + requeteCommit;
-				//execution de la requete d'insertion
-				client.query(requeteLimitee, (err, res) => {
-					console.log(err, res)
-				});
-
-		}else{
-			console.log(err, res);
-		}
-	});
-	
-	res.json({message : "L'insertion du projet et de l'utilisateur associé est un succès !", methode : req.method});
-})
-
-
 
 /*
 	/USERS
 */
 
-myRouter.route('/users')
-// GET
-.get(function(req,response){
-	const requeteSelectionUser = "SELECT * from gitlab_user";
-	const query = {
-		text: requeteSelectionUser,
-		types: {
-			getTypeParser: () => val => val,
-		},
+myRouter.route('/users/:username')
+//POST
+.post(function(req,response){
+	const username = req.params.username;
+	const verifQuery = {
+		text: 'SELECT "user"."users"."username" FROM "user"."users" WHERE "user"."users"."username"=$1',
+		values: [username]
 	}
-	// callback
-	client.query(query, (err, res) => {
+	//verification if the users exists in db
+	client.query(verifQuery, (err, res) => {
 		if (err) {
-			console.log(err.stack);
+			console.log(err);
 			response.send({
 				success: false,
-				code: 400
+				code: 400,
+				message: "Error while verifying if the user "+username+" exists in db"
 			});
 		} else {
-			const jsonObject={};
-			const key = 'user';
 			const rows = res.rows;
-			jsonObject[key] = [];
-			for (var i = 0; i < rows.length; i++) { 
-				var users={
-					"user_id":rows[i].user_id,
-					"name" :rows[i].name,
-					"username":rows[i].username,
-				};
-				jsonObject[key].push(users);
+			//the user doesn't exist in db : he is inserted
+			if(rows.length==0){
+				 const userInsertionQuery = {
+					text: 'INSERT INTO "rdb"."user"."users"(username) values ($1)',
+					 values: [username]
+				}
+				client.query(userInsertionQuery, (err, res) => {
+					if (err) {
+						console.log(err.stack);
+						response.send({
+							success: false,
+							code: 400,
+							message: "Error during user creation."
+						});
+					} else {
+						response.send({
+							success: true,
+							code: 200,
+							message: 'The user '+username+' has been inserted in db'
+						});
+					}
+				});
+			}else{
+				response.send({
+					success: true,
+					code: 200,
+					message: 'The user '+username+' already exists in db'
+				});
 			}
-			response.send({
-				success: true,
-				code: 200,
-				data :jsonObject
-			});
-		}
+			//the user already exists in db, he is updated
+				/*
+			else{
+				const userUpdateRequest= 
+				"UPDATE USER SET USERNAME='" + 
+	 			username +
+	 			"', EMAIL='" + 
+	 			email +
+	 			"',FIRSTNAME='" + 
+	 			firstname +
+	 			"',LASTNAME='" + 
+	 			lastname + 
+				 "');COMMIT;";
+				 const userUpdateQuery = {
+					text: userUpdateRequest,
+					types: {
+						getTypeParser: () => val => val,
+					},
+				}
+				client.query(userUpdateQuery, (err, res) => {
+					if (err) {
+						console.log(err.stack);
+						response.send({
+							success: false,
+							code: 400
+						});
+					} else {
+						response.send({
+							success: true,
+							code: 200,
+						});
+					}
+				});
+			}
+	*/	}
 	})
-})
+});
 
 /*
-	/USERS/:ID
+	/USERS/USER:USERNAME
 */
-
-myRouter.route('/users/:id')
+myRouter.route('/users/:username')
 // GET
 .get(function(req,response){
-	const user_id = req.params.id;
-	const requeteSelectionUser = "SELECT * from gitlab_user where user_id ="+user_id+";";
-	const query = {
-		text: requeteSelectionUser,
-		types: {
-			getTypeParser: () => val => val,
-		},
+	const username = req.params.username;
+	const userSelectionQuery = {
+		text: 'SELECT * FROM "user"."users" where "user"."users"."username" = $1',
+		values: [username]
 	}
 	// callback
-	client.query(query, (err, res) => {
+	client.query(userSelectionQuery, (err, res) => {
 		if (err) {
 			console.log(err.stack);
 			response.send({
 				success: false,
-				code: 400
+				code: 400,
+				message: 'Error while getting the user '+username+' in db.'
 			});
 		} else {
 			const jsonObject={};
-			const key = 'user';
+			const key = 'users';
 			const rows = res.rows;
 			jsonObject[key] = [];
 			for (var i = 0; i < rows.length; i++) { 
-				var users={
-					"user_id":rows[i].user_id,
-					"name" :rows[i].name,
+				var user={
 					"username":rows[i].username,
+					"firstname" :rows[i].firstname,
+					"lastname":rows[i].lastname,
 				};
-				jsonObject[key].push(users);
+				jsonObject[key].push(user);
 			}
 			response.send({
 				success: true,
@@ -251,54 +169,6 @@ myRouter.route('/users/:id')
 		}
 	})
 })
-
-/*
-	/USERS/:ID/PROJECTS
-*/
-
-myRouter.route('/users/:id/projects')
-// GET
-.get(function(req,response){
-	const user_id = req.params.id;
-	const requeteSelectionProjetsDeUser = "SELECT * from project where owner_id ="+user_id+";";
-	const query = {
-		text: requeteSelectionProjetsDeUser,
-		types: {
-			getTypeParser: () => val => val,
-		},
-	}
-	// callback
-	client.query(query, (err, res) => {
-		if (err) {
-			console.log(err.stack);
-			response.send({
-				success: false,
-				code: 400
-			});
-		} else {
-			const jsonObject={};
-			const key = 'project';
-			const rows = res.rows;
-			jsonObject[key] = [];
-			for (var i = 0; i < rows.length; i++) { 
-				var projects={
-					"project_id":rows[i].project_id,
-					"owner_id" :rows[i].owner_id,
-					"created_at":rows[i].created_at,
-					"project_name":rows[i].project_name
-				};
-				jsonObject[key].push(projects);
-			}
-			response.send({
-				success: true,
-				code: 200,
-				data :jsonObject
-			});
-		}
-	})
-})
-
-
 
 
 //--------------------------------------------------------------------------------------------------------//
@@ -331,21 +201,12 @@ app.use(mongoSanitize());
 app.use(xss());
 
  
-// Nous demandons à l'application d'utiliser notre routeur avec le rate limiting
+// asking for the ap to use ratelimiting
 app.use(myRouter,limit);  
  
-// Démarrer le serveur 
+// Starting server
 app.listen(port, hostname, function(){
 	console.log("Mon serveur fonctionne sur http://"+ hostname +":"+port); 
 });
-
-
-//--------------------------------------------------------------------------------------------------------//
-//GENERATION AUTOMATIQUE DE LA DOC DE L API
-
-
-const nodeApiDocGenerator = require('node-api-doc-generator')
-nodeApiDocGenerator(app,process.env['app.hostname'],process.env['app.port'])
-
 
 
