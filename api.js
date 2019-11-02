@@ -46,6 +46,8 @@ myRouter.route('/users/:username')
 //POST
 .post(function(req,response){
 	const username = req.params.username;
+	const firstname = req.body.firstname;
+	const lastname = req.body.lastname;
 	const verifQuery = {
 		text: 'SELECT "user"."users"."username" FROM "user"."users" WHERE "user"."users"."username"=$1',
 		values: [username]
@@ -64,8 +66,8 @@ myRouter.route('/users/:username')
 			//the user doesn't exist in db : he is inserted
 			if(rows.length==0){
 				 const userInsertionQuery = {
-					text: 'INSERT INTO "rdb"."user"."users"(username) values ($1)',
-					 values: [username]
+					text: 'INSERT INTO "user".users(username,lastname,firstname) values ($1,$2,$3)',
+					 values: [username,lastname,firstname]
 				}
 				client.query(userInsertionQuery, (err, res) => {
 					if (err) {
@@ -83,48 +85,30 @@ myRouter.route('/users/:username')
 						});
 					}
 				});
+			//the user already exists in db : he is updated
 			}else{
-				response.send({
-					success: true,
-					code: 200,
-					message: 'The user '+username+' already exists in db'
-				});
-			}
-			//the user already exists in db, he is updated
-				/*
-			else{
-				const userUpdateRequest= 
-				"UPDATE USER SET USERNAME='" + 
-	 			username +
-	 			"', EMAIL='" + 
-	 			email +
-	 			"',FIRSTNAME='" + 
-	 			firstname +
-	 			"',LASTNAME='" + 
-	 			lastname + 
-				 "');COMMIT;";
-				 const userUpdateQuery = {
-					text: userUpdateRequest,
-					types: {
-						getTypeParser: () => val => val,
-					},
-				}
+				const userUpdateQuery = {
+					text: 'UPDATE "user".users set lastname=$1, firstname=$2 where username = $3',
+					 values: [lastname,firstname,username]
+				};
 				client.query(userUpdateQuery, (err, res) => {
 					if (err) {
 						console.log(err.stack);
 						response.send({
 							success: false,
-							code: 400
+							code: 400,
+							message: "Error during user update."
 						});
 					} else {
 						response.send({
 							success: true,
 							code: 200,
+							message: 'The user '+username+' has been updated in db'
 						});
 					}
 				});
 			}
-	*/	}
+		}
 	})
 });
 
