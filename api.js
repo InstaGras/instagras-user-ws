@@ -1,7 +1,7 @@
 //--------------------------------------------------------------------------------------------------------//
 //GESTION DES VARIABLES D ENVIRONNEMENT
 
-require('dotenv').config({path: __dirname + '/.env'})
+require('dotenv').config({path:'./.env'})
 
 //--------------------------------------------------------------------------------------------------------//
 //DB CONNECTION
@@ -42,7 +42,7 @@ myRouter.route('/')
 	/USERS
 */
 
-myRouter.route('/users')
+myRouter.route('/userws/users')
 //POST
 .post(function(req,response){
 	const username = req.body.username;
@@ -98,7 +98,7 @@ myRouter.route('/users')
 });
 
 
-myRouter.route('/users/:username')
+myRouter.route('/userws/users/:username')
 //PUT
 .put(function(req,response){
 	const username = req.params.username;
@@ -156,7 +156,7 @@ myRouter.route('/users/:username')
 /*
 	/USERS/USER:USERNAME
 */
-myRouter.route('/users/:username')
+myRouter.route('/userws/users/:username')
 // GET
 .get(function(req,response){
 	const username = req.params.username;
