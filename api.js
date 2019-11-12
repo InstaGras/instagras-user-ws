@@ -42,10 +42,10 @@ myRouter.route('/')
 	/USERS
 */
 
-myRouter.route('/users/:username')
+myRouter.route('/users')
 //POST
 .post(function(req,response){
-	const username = req.params.username;
+	const username = req.body.username;
 	const firstname = req.body.firstname;
 	const lastname = req.body.lastname;
 	const verifQuery = {
@@ -85,6 +85,47 @@ myRouter.route('/users/:username')
 						});
 					}
 				});
+			//the user already exists in db : not
+			}else{
+				response.send({
+					success: true,
+					code: 200,
+					message: 'The user '+username+' already exists in db'
+				});
+			}
+		}
+	})
+});
+
+
+myRouter.route('/users/:username')
+//PUT
+.put(function(req,response){
+	const username = req.params.username;
+	const firstname = req.body.firstname;
+	const lastname = req.body.lastname;
+	const verifQuery = {
+		text: 'SELECT "user"."users"."username" FROM "user"."users" WHERE "user"."users"."username"=$1',
+		values: [username]
+	}
+	//verification if the users exists in db
+	client.query(verifQuery, (err, res) => {
+		if (err) {
+			console.log(err);
+			response.send({
+				success: false,
+				code: 400,
+				message: "Error while verifying if the user "+username+" exists in db"
+			});
+		} else {
+			const rows = res.rows;
+			//the user doesn't exist in db : he is inserted
+			if(rows.length==0){
+				response.send({
+					success: false,
+					code: 200,
+					message: 'The user '+username+' doesn\'t exist in db'
+			});
 			//the user already exists in db : he is updated
 			}else{
 				const userUpdateQuery = {
