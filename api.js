@@ -1,7 +1,7 @@
 //--------------------------------------------------------------------------------------------------------//
 //GESTION DES VARIABLES D ENVIRONNEMENT
 
-require('dotenv').config({path:'./.env'})
+require('dotenv').config({path: __dirname + '/.env'})
 
 //--------------------------------------------------------------------------------------------------------//
 //DB CONNECTION
@@ -28,10 +28,12 @@ const port = process.env['app.port'];
 const app = express(); 
 const bodyParser = require("body-parser");
 const myRouter = express.Router(); 
+const cors = require('cors');
 
+app.use(cors());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
- 
+
 myRouter.route('/')
 //permet de prendre en charge toutes les méthodes. 
 .all(function(req,res){ 
