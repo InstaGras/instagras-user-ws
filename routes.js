@@ -1,5 +1,3 @@
-var nbFollowers;
-var nbFollowed;
 
 function createUser(req,response,client){
 	const username = req.body.username;
@@ -175,6 +173,39 @@ function getUserByUsername(req,response,client){
 	});
 }
 
+function getUsers(req,response,client){
+	const usersSelectionQuery = {
+		text: 'SELECT * FROM "user"."users"'
+	}
+	client.query(usersSelectionQuery, (err, res) => {
+	if (err) {
+		console.log(err.stack);
+		response.send({
+			success: false,
+			code: 400,
+			message: 'Error while getting the list of all users in db.'
+		});
+		} else {
+			const jsonObject={};
+			const key = 'users';
+			const rows = res.rows;
+			jsonObject[key] = [];
+			for (var i = 0; i < rows.length; i++) { 
+				var user={
+					"username":rows[i].username,
+				};
+				jsonObject[key].push(user);
+			}
+			response.send({
+				success: true,
+				code: 200,
+				data :jsonObject
+			});
+		}
+	})
+}
+
+
 function createFollower(req,response,client){
 	const followerUsername = req.body.follower_username;
 	const followedUsername = req.body.followed_username;
@@ -229,6 +260,7 @@ module.exports = {
     createUser,
 	updateUserByUsername,
 	getUserByUsername,
+	getUsers,
 	createFollower,
 	deleteFollower,
 }

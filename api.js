@@ -58,6 +58,10 @@ myRouter.route('/userws/users/:username')
 .get(function(req,response){
 	routes.getUserByUsername(req,response,client);
 })
+myRouter.route('/userws/users')
+.get(function(req,response){
+	routes.getUsers(req,response,client);
+})
 
 // DELETE
 myRouter.route('/userws/followers/')
