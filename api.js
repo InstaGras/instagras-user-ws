@@ -54,13 +54,17 @@ myRouter.route('/userws/users/:username')
 });
 
 // GET
+myRouter.route('/userws/users')
+.get(function(req,response){
+	routes.getUsers(req,response,client);
+})
 myRouter.route('/userws/users/:username')
 .get(function(req,response){
 	routes.getUserByUsername(req,response,client);
 })
-myRouter.route('/userws/users')
+myRouter.route('/userws/users/:username/isFollowed')
 .get(function(req,response){
-	routes.getUsers(req,response,client);
+	routes.isFollowed(req,response,client);
 })
 
 // DELETE
