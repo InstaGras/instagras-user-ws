@@ -262,7 +262,7 @@ function getFollowersByUsername(req,response,client){
 			jsonObject[key] = [];
 			for (var i = 0; i < rows.length; i++) { 
 				var follower={
-					"username":rows[i].username,
+					"username":rows[i].follower_username,
 				};
 				jsonObject[key].push(follower);
 			}
