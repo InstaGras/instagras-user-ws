@@ -240,7 +240,7 @@ function getFollowersByUsername(req,response,client){
 }
 
 function getFollowedByUsername(req,response,client){
-	const followerUsername = req.params.username;
+	const followedUsername = req.params.username;
 	const followedSelectionQuery = {
 		text: 'SELECT "user"."followers".followed_username FROM "user"."followers" where "user"."followers".follower_username = $1',
 		values: [followedUsername]
