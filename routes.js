@@ -262,7 +262,7 @@ function getFollowersByUsername(req,response,client){
 			jsonObject[key] = [];
 			for (var i = 0; i < rows.length; i++) { 
 				var follower={
-					"username":rows[i].follower_username,
+					"follower_username":rows[i].follower_username,
 				};
 				jsonObject[key].push(follower);
 			}
@@ -274,6 +274,41 @@ function getFollowersByUsername(req,response,client){
 		}
 	})
 }
+
+function getFollowedByUsername(req,response,client){
+	const followerUsername = req.params.username;
+	const followedSelectionQuery = {
+		text: 'SELECT "user"."followers".followed_username FROM "user"."followers" where "user"."followers".follower_username = $1',
+		values: [followedUsername]
+	}
+	client.query(followedSelectionQuery, (err, res) => {
+	if (err) {
+		console.log(err.stack);
+		response.send({
+			success: false,
+			code: 400,
+			message: 'Error while getting the followers\' list of the user '+followedUsername
+		});
+		} else {
+			const jsonObject={};
+			const key = 'followed';
+			const rows = res.rows;
+			jsonObject[key] = [];
+			for (var i = 0; i < rows.length; i++) { 
+				var followed={
+					"followed_username":rows[i].followed_username,
+				};
+				jsonObject[key].push(followed);
+			}
+			response.send({
+				success: true,
+				code: 200,
+				data :jsonObject
+			});
+		}
+	})
+}
+
 
 
 
