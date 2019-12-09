@@ -62,6 +62,10 @@ myRouter.route('/userws/users/:username')
 .get(function(req,response){
 	routes.getUserByUsername(req,response,client);
 })
+myRouter.route('/userws/followers/:username')
+.get(function(req,response){
+	routes.getFollowersByUsername(req,response,client);
+})
 myRouter.route('/userws/users/:username/isFollowed')
 .get(function(req,response){
 	routes.isFollowed(req,response,client);

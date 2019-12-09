@@ -241,6 +241,42 @@ function getUsers(req,response,client){
 	})
 }
 
+function getFollowersByUsername(req,response,client){
+	const followedUsername = req.params.username;
+	const followersSelectionQuery = {
+		text: 'SELECT "user"."followers".follower_username FROM "user"."followers" where "user"."followers".followed_username = $1',
+		values: [followedUsername]
+	}
+	client.query(followersSelectionQuery, (err, res) => {
+	if (err) {
+		console.log(err.stack);
+		response.send({
+			success: false,
+			code: 400,
+			message: 'Error while getting the followers\' list of the user '+followedUsername
+		});
+		} else {
+			const jsonObject={};
+			const key = 'followers';
+			const rows = res.rows;
+			jsonObject[key] = [];
+			for (var i = 0; i < rows.length; i++) { 
+				var follower={
+					"username":rows[i].username,
+				};
+				jsonObject[key].push(follower);
+			}
+			response.send({
+				success: true,
+				code: 200,
+				data :jsonObject
+			});
+		}
+	})
+}
+
+
+
 
 function createFollower(req,response,client){
 	const followerUsername = req.body.follower_username;
@@ -286,7 +322,7 @@ function deleteFollower(req,response,client){
 			response.send({
 				success: true,
 				code: 200,
-				message: 'The user '+followedUsername+' doesn\'t follow anymore '+followerUsername,
+				message: 'The user '+followerUsername+' doesn\'t follow anymore '+followedUsername,
 			});
 		}
 	})
@@ -299,7 +335,8 @@ module.exports = {
 	getUsers,
 	createFollower,
 	deleteFollower,
-	isFollowed
+	isFollowed,
+	getFollowersByUsername
 }
 
 
