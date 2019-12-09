@@ -173,42 +173,6 @@ function getUserByUsername(req,response,client){
 	});
 }
 
-function isFollowed(req,response,client){
-	const followedUsername = req.params.username;
-	const followerUsername = req.body.follower;
-	const isFollowedQuerry = {
-		text: 'SELECT count(*) as is_followed FROM "user"."followers" where "user"."followers"."followed_username" = $1 and "user"."followers"."follower_username" = $2',
-		values: [followedUsername,followerUsername]
-	}
-	client.query(isFollowedQuerry, (err, res) => {
-		if (err) {
-			console.log(err.stack);
-			response.send({
-				success: false,
-				code: 400,
-				message: 'Error while searching if the user '+followedUsername+' is followed by the user '+followerUsername
-			});
-		} else {
-			const isFollowed=res.rows[0].is_followed;
-			console.log(isFollowed);
-			if(isFollowed==0){
-				response.send({
-				success: false,
-				code: 200,
-				message: 'The user '+followedUsername+' isn\'t followed by '+followerUsername,
-				});
-			}else{
-				response.send({
-				success: true,
-				code: 200,
-				message: 'The user '+followedUsername+' is followed by '+followerUsername,
-				});
-			}
-		}
-	});
-}
-
-
 function getUsers(req,response,client){
 	const usersSelectionQuery = {
 		text: 'SELECT * FROM "user"."users"'
@@ -370,8 +334,8 @@ module.exports = {
 	getUsers,
 	createFollower,
 	deleteFollower,
-	isFollowed,
-	getFollowersByUsername
+	getFollowersByUsername,
+	getFollowedByUsername
 }
 
 
