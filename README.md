@@ -10,6 +10,17 @@ These instructions will get you a copy of the project up and running on your loc
 
 To launch this api you will need to have node.js installed on your machine.
 
+You also need to add a .env file at the root of the project :
+
+```
+app.port=
+app.hostname=
+client.user=
+client.host=
+client.database=
+client.password=
+client.port=
+```
 
 ### Installing
 ```
