@@ -20,28 +20,28 @@ node api.js
 ```
 
 
-### How to use it 
+## How to use it 
 
 You can send http requests to diffent routes :
 
 
-# POST
+### POST
 
 * /userws/users : create a new user
 * /userws/followers : create a new follower
 
-# PUT
+### PUT
 
 * /userws/users/:username : update an user by his username
 
-# GET
+### GET
 
 * /userws/users : get all users
 * /userws/users/:username : get an user by his username
 * /userws/followers/:username : get all followers of an user by his username
 * /userws/followed/:username : get all the users followed by an user by his username
 
-#DELETE
+### DELETE
 
 * /userws/followers/ : delete a follower by followed username and follower username
 
